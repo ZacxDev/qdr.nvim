@@ -1,5 +1,5 @@
 local fzf = require("fzf")
-local lyaml   = require "lyaml"
+local lyaml = require "lyaml"
 
 local execute = vim.api.nvim_command
 
@@ -31,6 +31,7 @@ function runQdr()
       if ix ~= nil then
         qfileDir = string.sub(qfileDir, 0, ix - 1)
       else
+        print("No qdr.yml file found")
         return
       end
     end
