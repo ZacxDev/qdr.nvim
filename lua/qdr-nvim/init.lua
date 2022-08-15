@@ -4,7 +4,7 @@ local function setup(parameters)
 end
 
 vim.api.nvim_create_user_command(
-    'qdr',
+    'Qdr',
     function(input)
         runQdr()
     end,
