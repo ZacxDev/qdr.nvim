@@ -8,7 +8,7 @@ vim.api.nvim_create_user_command(
     function(input)
         runQdr()
     end,
-    {bang = true, desc = 'a new command to do the thing'}
+    {bang = true, desc = 'open qdr menu'}
 )
 
 return {
