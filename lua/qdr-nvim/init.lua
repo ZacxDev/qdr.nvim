@@ -1,4 +1,4 @@
-local q = require "qdr"
+local q = require "qdr-nvim.qdr"
 
 local function setup(parameters)
 end
