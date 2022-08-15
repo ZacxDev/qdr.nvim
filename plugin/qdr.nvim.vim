@@ -1,4 +1,4 @@
-lua qdr = require("qdr.nvim")
+lua qdr = require("qdr-nvim")
 
-lua require'qdr.nvim'.setup({})
+lua require'qdr-nvim'.setup({})
 
