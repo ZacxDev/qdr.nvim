@@ -16,7 +16,7 @@ function lines_from(file)
   if not file_exists(file) then return "" end
   local lines = ""
   for line in io.lines(file) do 
-    lines = lines .. "\n" .. line
+    lines = lines .. line .. "\n"
   end
   return lines
 end
@@ -24,16 +24,20 @@ end
 function runQdr()
   coroutine.wrap(function()
     -- tests the functions above
-    local file = 'qdr.yml'
-    local lines = lines_from(file)
-    print(lines)
+    local cwd = vim.fn.getcwd()
+    local qfileDir = cwd
+    while not file_exists(qfileDir .. '/qdr.yml') and qfileDir ~= "/" do
+      local ix = string.find(qfileDir, "[/][^/]*[^/]$")
+      if ix ~= nil then
+        qfileDir = string.sub(qfileDir, 0, ix - 1)
+      else
+        return
+      end
+    end
+    local qfilePath = qfileDir .. '/qdr.yml'
 
-    local opt1 = "Tilt Trigger buf";
-    local opt2 = "Graphql Codegen";
-    local cmdMap = {
-      [opt1]="tilt trigger buf",
-      [opt2]="tilt trigger graphql",
-    }
+    local lines = lines_from(qfilePath)
+    local cmdMap = lyaml.load(lines)
 
     local f = {}
     for k, _ in pairs(cmdMap) do
