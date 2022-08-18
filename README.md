@@ -2,8 +2,8 @@
 
 ## Requirements
 
-`fzf` binary in `$PATH`
-lyaml lua module
+- `fzf` binary in `$PATH`
+- lyaml lua module
 
 ## Installation
 
@@ -13,6 +13,8 @@ use 'ZacxDev/qdr.nvim'
 ```
 
 ## Usage
+
+![Imgur](https://i.imgur.com/CnNgyCL.gif)
 
 ```vimscript
 " Open the qdr picker
