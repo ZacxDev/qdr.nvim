@@ -6,7 +6,7 @@ end
 vim.api.nvim_create_user_command(
     'Qdr',
     function(input)
-        qdr()
+        Qdr()
     end,
     {bang = true, desc = 'open qdr menu'}
 )

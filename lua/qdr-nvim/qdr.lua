@@ -38,7 +38,7 @@ local function run_command_async(command, cb)
   cb(nil, "", 0)
 end
 
-local function qdr()
+function Qdr()
   local function done(command)
     local function callback(handle, result, exit_code)
       local columns, lines = vim.o.columns, vim.o.lines
@@ -127,6 +127,6 @@ local function qdr()
   run_fzf()
 end
 
--- qdr()
+-- Qdr()
 
-return { qdr }
+return { Qdr }
