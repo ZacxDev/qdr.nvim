@@ -127,6 +127,6 @@ local function qdr()
   run_fzf()
 end
 
-qdr()
+-- qdr()
 
 return { runQdr }
