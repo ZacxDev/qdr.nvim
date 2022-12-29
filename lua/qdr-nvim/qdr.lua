@@ -129,4 +129,4 @@ end
 
 -- qdr()
 
-return { runQdr }
+return { qdr }
