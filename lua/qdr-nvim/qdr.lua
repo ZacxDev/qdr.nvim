@@ -25,11 +25,11 @@ _G.zhandle_term_close = function()
     -- Clear the autocmd after it's executed
     vim.cmd("autocmd! CaptureExitCode")
 
-    vim.cmd("sleep 200m")
+    --vim.cmd("sleep 200m")
 
     -- Clean up the temporary file
-    os.remove("/tmp/nvim_terminal_output.txt")
-    os.remove("/tmp/nvim_terminal_exitcode.txt")
+    --os.remove("/tmp/nvim_terminal_output.txt")
+    --os.remove("/tmp/nvim_terminal_exitcode.txt")
 end
 
 local function get_new_buf()
