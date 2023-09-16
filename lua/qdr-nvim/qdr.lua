@@ -153,6 +153,6 @@ function Qdr()
   run_fzf()
 end
 
-Qdr()
+--Qdr()
 
 return { Qdr }
