@@ -1,5 +1,91 @@
 local fzf = require("fzf")
 local lyaml = require "lyaml"
+local api = vim.api
+
+function read_file(filename)
+    local file = io.open(filename, "r") -- open for reading
+    if not file then return nil end
+    local content = file:read("*all") -- read the entire content
+    file:close()
+    return content
+end
+
+_G.zhandle_term_close = function()
+    local exit_code = read_file("/tmp/nvim_terminal_exitcode.txt")
+
+    -- Check the exit code
+    if exit_code == "0\n" then
+        print("success")
+    else
+        local buf = _G.qdr_get_new_buf()
+        local win_id = _G.qdr_get_new_win(buf)
+
+        vim.cmd("terminal")
+        vim.fn.chansend(vim.b.terminal_job_id, "cat /tmp/nvim_terminal_output.txt\n")
+    end
+
+    -- Clear the autocmd after it's executed
+    vim.cmd("autocmd! CaptureExitCode")
+
+    vim.cmd("sleep 200m")
+
+    -- Clean up the temporary file
+    os.remove("/tmp/nvim_terminal_output.txt")
+    os.remove("/tmp/nvim_terminal_exitcode.txt")
+end
+
+local function get_new_buf()
+    local buf = api.nvim_create_buf(false, true)
+    return buf
+end
+
+local function get_new_win(buf)
+    local width = api.nvim_get_option("columns")
+    local height = api.nvim_get_option("lines")
+    
+    local win_width = math.floor(width * 0.3)
+    local win_height = math.floor(height * 0.3)
+    
+    local row = 0
+    local col = width - win_width
+    
+    local win_id = api.nvim_open_win(buf, true, {
+        relative = "editor",
+        width = win_width,
+        height = win_height,
+        col = col,
+        row = row,
+        style = "minimal"
+    })
+
+    return win_id
+end
+
+_G.qdr_get_new_buf = get_new_buf
+_G.qdr_get_new_win = get_new_win
+
+local function open_top_right_terminal_and_check(inputCmd)
+    local buf = get_new_buf()
+    local original_win_id = api.nvim_get_current_win()
+    local win_id = get_new_win(buf)
+
+    vim.cmd("terminal")
+
+    vim.fn.chansend(vim.b.terminal_job_id, "bash -c \"" .. inputCmd .. "\" 2> /tmp/nvim_terminal_output.txt >&1 ; echo $? > /tmp/nvim_terminal_exitcode.txt && exit 0 ; exit 1\n")
+    vim.cmd("sleep 100m")
+
+    -- Set up the autocmd for TermClose
+    vim.cmd(string.format([[
+    augroup CaptureExitCode
+        autocmd!
+        autocmd TermClose * execute "lua _G.zhandle_term_close(%s, %s)"
+    augroup END
+    ]], buf, win_id))
+
+    vim.cmd("sleep 100m")
+
+    api.nvim_set_current_win(original_win_id)
+end
 
 -- see if the file exists
 local function file_exists(file)
@@ -19,73 +105,15 @@ local function lines_from(file)
   return lines
 end
 
-local function run_command_async(command, cb)
-  -- Run the command and print exit code in a unique pattern so we can
-  -- extract it from result
-  local cmd_with_exit = string.format("%s ; printf \":|$?|:\"", command)
-  local handle = io.popen(cmd_with_exit)
-  local exit_wrap = ":|[0-9]|:$"
-  if handle ~= nil then
-    local full_result = handle:read("*a")
-    local result = string.gsub(full_result, exit_wrap, "", 1)
-
-    local exit_code_with_wrap = string.match(full_result, exit_wrap)
-    local exit_code = tonumber(string.match(exit_code_with_wrap, "[0-9]"))
-    cb(handle, result, exit_code)
-    return
-  end
-
-  cb(nil, "", 0)
+local function run_command_async(command)
+  open_top_right_terminal_and_check(command)
 end
 
 function Qdr()
   local function done(command)
-    local function callback(handle, result, exit_code)
-      local columns, lines = vim.o.columns, vim.o.lines
-      local win_opts = {
-        width = math.floor(columns * 0.5),
-        height = math.floor(lines * 0.7),
-        style = 'minimal',
-        relative = 'editor'
-      }
-
-      win_opts.row = math.floor(((lines - win_opts.height) * 0.1) - 1)
-      win_opts.col = math.floor((columns - win_opts.width) * 0.95)
-
-      --local win = vim.api.nvim_get_current_win()
-      --local buf = vim.api.nvim_get_current_buf()
-      local bufnr = vim.api.nvim_create_buf(false, true)
-      local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
-
-      vim.api.nvim_buf_set_text(0, 0, 0, 0, 0, {result})
-      if handle ~= nil then
-        handle:close()
-      end
-
-      if exit_code == 0 then
-        vim.api.nvim_win_close(winid, {force=true})
-        vim.api.nvim_buf_delete(bufnr)
-      else
-        vim.api.nvim_set_current_win(winid)
-        vim.api.nvim_set_current_buf(bufnr)
-
-        local last_line_num = vim.api.nvim_buf_line_count(bufnr)
-        local last_line_text = vim.api.nvim_buf_get_lines(
-          bufnr,
-          last_line_num - 1,
-          last_line_num,
-          true
-        )[1]
-
-        --print(string.format("hiiii %s %s", last_line_num, string.len(last_line_text)))
-        -- Move the cursor to the last line/column
-        vim.api.nvim_win_set_cursor(winid, {last_line_num, string.len(last_line_text)})
-      end
-    end
-
     local co = coroutine.create(function()
       print(command)
-      run_command_async(command, callback)
+      run_command_async(command)
     end)
 
     coroutine.resume(co)
@@ -127,6 +155,6 @@ function Qdr()
   run_fzf()
 end
 
--- Qdr()
+--Qdr()
 
 return { Qdr }
