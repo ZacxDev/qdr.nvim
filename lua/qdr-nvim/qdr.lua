@@ -14,9 +14,7 @@ _G.zhandle_term_close = function()
     local exit_code = read_file("/tmp/nvim_terminal_exitcode.txt")
 
     -- Check the exit code
-    if exit_code == "0\n" then
-        print("success")
-    else
+    if exit_code ~= "0\n" then
         local buf = _G.qdr_get_new_buf()
         local win_id = _G.qdr_get_new_win(buf)
 
@@ -155,6 +153,6 @@ function Qdr()
   run_fzf()
 end
 
---Qdr()
+Qdr()
 
 return { Qdr }
